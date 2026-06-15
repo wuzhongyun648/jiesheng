@@ -1,0 +1,17 @@
+# Claude Code / 本机配置（不上传）
+.claude/
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+
+# 文档草稿
+*.draft.md
+
+# 运行时产生的记忆/产物（生产默认在 ~/.jiesheng；仓库内仅留种子）
+workspace/outputs/
+workspace/READING_LIST.md
+
+# OS
+.DS_Store
+Thumbs.db
