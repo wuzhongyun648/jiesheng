@@ -160,4 +160,10 @@ jiesheng/
 
 ---
 
+## 许可
+
+MIT License，详见 [LICENSE](LICENSE)。
+
+---
+
 > 本项目最初是腾讯产品经理实训营的作业，后续持续落地为可运行的 MVP。
