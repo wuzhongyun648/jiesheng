@@ -34,11 +34,19 @@ description: >
   2. 环境变量 `JIESHENG_WORKSPACE`
   3. 默认 `~/.jiesheng/workspace`（`Path.home()`；Windows 即 `C:\Users\<用户名>\.jiesheng\workspace`），不存在则自动创建。
   > 本地开发自测：`export JIESHENG_WORKSPACE="$PWD/workspace"`，让脚本走仓库内的种子，不污染真实记忆。
+- **★ Agent 读写记忆，一律用上面解析出的绝对 workspace，绝不用裸相对路径 `workspace/…`。**
+  脚本（`_paths.py`）按绝对路径解析、不看当前工作目录；但 Agent 自己的读写文件工具会把相对路径
+  按**运行时的当前工作目录**解析——QClaw 的 CWD 是 `~/.qclaw/`，于是 `workspace/MEMORY.md` 会落进
+  `~/.qclaw/workspace/`，与脚本写的 `~/.jiesheng/workspace/` **脑裂**，也破坏「记忆与运行时解耦」。
+  所以读 `MEMORY.md` / 论文文件前，**先跑 `python scripts/print_workspace.py` 拿到与脚本同源的绝对路径**
+  （它按同一优先级解析，stdout 就是那一行绝对路径），再用它拼出 `MEMORY.md`、`memory/papers/{id}.md` 等。
+  不要手算 `~` 或用裸相对路径。
 - **markdown 是唯一真相源**，不要引入别的存储。
 
 ## 每轮对话开始
 
-先用读文件工具读 `workspace/MEMORY.md`，锁定当前课题与卡点（如：contextual bandit 做图链路预测、
+先用读文件工具读 **workspace 绝对路径下的 `MEMORY.md`**（即 `$JIESHENG_WORKSPACE/MEMORY.md`，默认
+`~/.jiesheng/workspace/MEMORY.md`；不要读相对的 `workspace/MEMORY.md`），锁定当前课题与卡点（如：contextual bandit 做图链路预测、
 卡在 reward 非平稳）。**之后所有回答都咬住这个设定**，不要给教科书式的通用定义。
 
 ---
@@ -59,7 +67,7 @@ description: >
      python scripts/extract_pdf.py <pdf路径>
      ```
      （脚本只吐文本，不解读。若提示缺 PDF 后端，让用户 `pip install pypdf`。）
-   - 读 `workspace/MEMORY.md`，结合**课题与卡点**来读这篇——关注它和「我的设定」的关系，
+   - 读 workspace 绝对路径下的 `MEMORY.md`（默认 `~/.jiesheng/workspace/MEMORY.md`），结合**课题与卡点**来读这篇——关注它和「我的设定」的关系，
      **不要写教科书定义**。
 
 2. **抽「核心假设」「关键结论」，逐条标 `[原文 §x]`。**
@@ -141,7 +149,7 @@ description: >
    python scripts/save_related_work.py --input <draft.md>
    # 或   cat <draft.md> | python scripts/save_related_work.py
    ```
-   → 写到 `workspace/outputs/related_work_draft.md`。
+   → 由脚本写到 workspace（绝对路径）下的 `outputs/related_work_draft.md`，默认 `~/.jiesheng/workspace/outputs/related_work_draft.md`。
 
 ### 行为 B —— 顺脉络找下一步 + 检索 arXiv
 
@@ -158,7 +166,7 @@ description: >
    python scripts/add_to_reading_list.py --arxiv-id 2106.01234 --title "标题" --why "命中我的非平稳卡点"
    ```
    `hits.json` = `[{"arxiv_id":"…","title":"…","why":"…"}, …]`
-   → 追加到 `workspace/READING_LIST.md`，**按 arXiv id 去重、幂等**（重复跑不重复加）。
+   → 由脚本追加到 workspace（绝对路径）下的 `READING_LIST.md`，默认 `~/.jiesheng/workspace/READING_LIST.md`，**按 arXiv id 去重、幂等**（重复跑不重复加）。
 5. 检索/追加属写操作；联网与「接回待读」前向用户确认，符合高风险底线。
 
 ---
@@ -167,6 +175,7 @@ description: >
 
 | 脚本 | 作用 | 关键参数 |
 | --- | --- | --- |
+| `scripts/print_workspace.py` | 打印解析出的 workspace **绝对路径**（与所有脚本同源）；Agent 碰记忆前先跑它拿绝对路径 | `--all`、`--workspace` |
 | `scripts/extract_pdf.py` | PDF → 纯文本 | `<pdf>`、`--out 文件` |
 | `scripts/write_paper.py` | 结构化字段 → `memory/papers/{id}.md` | `--input 文件`/stdin、`--print`、`--force`、`--workspace` |
 | `scripts/list_papers.py` | 扫 `papers/*.md` → 各篇 `{id,title,核心假设,关联}` 摘要（JSON） | `--workspace` |

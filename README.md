@@ -40,7 +40,7 @@ qclaw skill install github:wuzhongyun648/jiesheng
 
 使用：在 QClaw 里丢进一篇论文 PDF，说「用结绳读一下这篇，能不能用」。Agent 会按 SOP 读它，抽出带出处的结构化笔记，扫描已有论文，发现冲突时主动提醒，并把笔记和关联边落盘。
 
-记忆存放：默认写到用户数据目录 `~/.jiesheng/workspace`，与技能代码分开，重装或更新技能不会丢记忆。可用环境变量 `JIESHENG_WORKSPACE` 或脚本参数 `--workspace` 覆盖。仓库里的 `workspace/` 是开发和演示用的种子记忆。
+记忆存放：默认写到用户数据目录 `~/.jiesheng/workspace`，与技能代码分开，重装或更新技能不会丢记忆。可用环境变量 `JIESHENG_WORKSPACE` 或脚本参数 `--workspace` 覆盖。仓库里的 `workspace/` 是开发和演示用的种子记忆。脚本按绝对路径解析、不看运行时工作目录；Agent 自己碰记忆前先跑 `python scripts/print_workspace.py` 取同一个绝对路径，避免用裸相对路径 `workspace/…`（在 QClaw 下会落进 `~/.qclaw/workspace/` 与脚本脑裂）。
 
 ---
 
@@ -103,6 +103,7 @@ jiesheng/
 ├── scripts/
 │   ├── _paths.py              # workspace 路径解析：--workspace > JIESHENG_WORKSPACE > ~/.jiesheng/workspace
 │   ├── _md.py                 # 共享的 markdown 读取与分节 helper，被 list_papers / link_papers 复用
+│   ├── print_workspace.py     # 打印解析出的 workspace 绝对路径；Agent 碰记忆前先取它，避免裸相对路径脑裂
 │   ├── extract_pdf.py         # PDF 转文本，pypdf 等后端，缺失时友好提示
 │   ├── write_paper.py         # 结构化字段写入 memory/papers/{id}.md，字段级 [原文]/[推断] 校验
 │   ├── list_papers.py         # 扫描已有论文摘要供 Agent 比对，从 markdown 读，非索引
